@@ -1,16 +1,20 @@
 {
   "name": "n01 Chalker",
-  "version": "0.1.3",
+  "version": "0.2.0.0",
+  "version_name": "0.2.0 beta1",
   "manifest_version": 3,
   "description": "n01のサイトで音声入力を実現します。",
   "content_scripts": [{
-    "matches": ["https://nakka.com/n01/*"],
+    "matches": ["https://nakka.com/n01/"],
     "js": ["js/jquery-3.6.0.min.js", "js/n01-chalker.js"]
   }],
   "icons" : {
     "128" : "icon128.png"
   },
   "host_permissions": [
-    "https://nakka.com/n01/*"
+    "https://nakka.com/n01/"
+  ],
+  "permissions": [
+    "storage"
   ]
 }

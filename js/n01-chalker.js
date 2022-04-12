@@ -1,87 +1,55 @@
 /* ========================================== 
   [[[TODO]]]
-・対戦相手のターンはOFFにすること。
+・オンライン対戦
+  ・対戦相手のターンはOFFにすること。
+  ・観戦中はオフとすること。
+
 ・60でーすなどをくみ取れるようにする。
-・n01のサイトを複数タブで開くと、常にCPU使用率が100％となる。
-・
 ============================================ */
 
-class n01Mic {
-
+class n01Calker {
+    
     constructor() {
-        
+        this.hash_id = '_' + Math.random().toString(36).substr(2);
+    
+        console.log(this.hash_id);
+        // set hash_id
+        var defaults = {
+            hash: this.hash_id
+        };
+        chrome.storage.sync.set(defaults, function() {});
+        this.enable = true;
+        this.inputFlg = false;
+
         const SpeechRecognitionClass = window.webkitSpeechRecognition || window.SpeechRecognition;
-        const rec = new SpeechRecognitionClass();
-        // rec.grammars = getGrammerList();
+        this.rec = new SpeechRecognitionClass();
+        // this.rec.grammars = getGrammerList();
 
-        rec.maxAlternatives = 10;
-        
-        rec.continuous = false;
-        rec.interimResults = false;
-        rec.lang = 'ja-JP';
+        this.rec.maxAlternatives = 10;
+        this.rec.continuous = false;
+        this.rec.interimResults = false;
+        this.rec.lang = 'ja-JP';
 
-        let obj = this;
-        rec.onresult = (event) => {
-            let str = "";
-            for (let idx in event.results[0]) {
-                let elm = event.results[0][idx];
-                if (elm.confidence != undefined) {
-                    let point = elm.transcript;
-                    console.log(point);
-                    let reg = /([0-9])本目 *です。*$/;
-                    if (reg.test(point)) {
-                        point = point.replace("です", "").trim();
-                        point = point.replace("。", "").trim();
-                        point = point.replace("本目", "").trim();
-            
-                        reg = /([0-9]+$)/;
-                        let mat = point.match(reg);
-                        if (mat.length <= 0) {
-                            return;
-                        }
-                        point = point.match(reg)[0];
-                        
-                        obj.setHonme(mat[0]);
-                        return;
-                    }
-                    reg = /(オーケー|OK) *です。*$/;
-                    if (reg.test(point)) {
-                        obj.pressOK();
-                        return;
-                    }
-                    reg = /(お願いします)。*$/;
-                    if (reg.test(point)) {
-                        obj.pressOK();
-                        return;
-                    }
-                    reg = /(キャンセル) *です。*$/;
-                    if (reg.test(point)) {
-                        obj.pressCancel();
-                        return;
-                    }
-                    reg = /([0-9])+ *(点です|点|てん|です)+。*$/;
-                    if (reg.test(point)) {
-                        point = point.replace("点", "").trim();
-                        point = point.replace("てん", "").trim();
-                        point = point.replace("です", "").trim();
-                        point = point.replace("。", "").trim();
-            
-                        reg = /([0-9]+$)/;
-                        let mat = point.match(reg);
-                        if (mat.length <= 0) {
-                            return;
-                        }
-                        
-                        obj.setPoint(mat[0]);
-                        return;
-                    }
-                    // str += elm.transcript + " : " + elm.confidence.toPrecision(2) + "\n";
-                }
+        // イベント設定
+        this.rec.onresult = (event) => {
+            this.inputFlg = false;
+            if (this.analysis(event)) {
+                this.inputFlg = true;
             }
-            
-            // alert(str);
         }
-        rec.onend = () => { rec.start() };
+        this.rec.onend = (event) => {
+            if ( this.enable ) {
+                let self = this;
+                if (self.inputFlg) {
+                    setTimeout(function(){
+                        self.rec.start();
+                    }, 2000);
+                    self.inputFlg = false;
+                } else {
+                    self.rec.start();
+                }
+            } 
+        }
     }
     
     /* ======================== */
@@ -98,7 +66,85 @@ class n01Mic {
     /* functions
     /* ======================== */
     run () {
-        rec.start();
+        this.rec.start();
+    }
+    stop () {
+        console.log(this.hash_id + " stop.");
+        this.enable = false;
+        this.rec.abort();
+    }
+    
+    analysis(event) {
+        let str = "";
+        for (let idx in event.results[0]) {
+            let elm = event.results[0][idx];
+            if (elm.confidence != undefined) {
+                let point = elm.transcript;
+                let confience = elm.confidence;
+                console.log(point + " : " + confience);
+                let reg = /([0-9])本目 *(です)*。*$/;
+                if (reg.test(point)) {
+                    point = point.replace("です", "").trim();
+                    point = point.replace("。", "").trim();
+                    point = point.replace("本目", "").trim();
+
+                    reg = /([0-9]+$)/;
+                    let mat = point.match(reg);
+//                    if (mat.length <= 0) {
+//                        return;
+//                    }
+                    point = point.match(reg)[0];
+                    
+                    this.setHonme(mat[0]);
+                    return true;
+                }
+                reg = /(オーケー|OK)$/;
+                if (reg.test(point)) {
+                    this.pressOK();
+                    return true;
+                }
+                // reg = /(オーケー|OK) *です。*$/;
+                // if (reg.test(point)) {
+                //     this.pressOK();
+                //     return;
+                // }
+                reg = /(お願いします)。*$/;
+                if (reg.test(point)) {
+                    this.pressOK();
+                    return true;
+                }
+                reg = /(キャンセル) *です。*$/;
+                if (reg.test(point)) {
+                    this.pressCancel();
+                    return true;
+                }
+                // reg = /([0-9])+ *(です)*。*$/;
+                reg = /([0-9])+ *(点|てん|です)*。*$/;
+                if (reg.test(point)) {
+                    point = point.replace("点", "").trim();
+                    point = point.replace("てん", "").trim();
+                    point = point.replace("時", "").trim();
+                    point = point.replace("です", "").trim();
+                    point = point.replace("。", "").trim();
+        
+                    reg = /([0-9]+$)/;
+                    let mat = point.match(reg);
+//                    if (mat.length <= 0) {
+//                        return;
+//                    }
+                    
+                    this.setPoint(mat[0]);
+                    return true;
+                }
+                reg = /ノースコア$/;
+                if (reg.test(point)) {
+                    this.setPoint(0);
+                    return true;
+                }
+            }
+        }
+        return false;
+        // alert(str);
     }
     setPoint(point) {
         if (!this.isNumber(point)) {
@@ -169,6 +215,22 @@ class n01Mic {
 }
 
 $(function(){
-    let mic = new n01Mic();
-    mic.run();
+    let n01calker = new n01Calker();
+    n01calker.run();
+
+    // hash_id in storage changed
+    chrome.storage.onChanged.addListener(function(changes, namespace) {
+        if (n01calker == null) {
+            return;
+        }
+        if (namespace == "sync") {
+            if (changes.hash) {
+                if (changes.hash.newValue != n01calker.hash_id) {
+                    n01calker.stop();
+                    n01calker = null;
+                }
+            }
+        }
+    });
 });
+
