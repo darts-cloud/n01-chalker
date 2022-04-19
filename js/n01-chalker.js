@@ -9,9 +9,6 @@
 
 class n01Calker {
     
-    // static lang = "en-GB";
-    static lang = "en-US";
-    
     constructor() {
         this.hash_id = '_' + Math.random().toString(36).substr(2);
     
@@ -23,16 +20,17 @@ class n01Calker {
         chrome.storage.sync.set(defaults, function() {});
         this.enable = true;
         this.inputFlg = false;
+        this.gameShotFlg = false;
 
         const SpeechRecognitionClass = window.webkitSpeechRecognition || window.SpeechRecognition;
         this.rec = new SpeechRecognitionClass();
-        this.rec.grammars = this.getGrammerList();
+        // this.rec.grammars = getGrammerList();
 
         this.rec.maxAlternatives = 10;
         this.rec.continuous = false;
         this.rec.interimResults = false;
-        this.rec.lang = n01Calker.lang;
-        
+        this.rec.lang = 'ja-JP';
+
         // イベント設定
         this.rec.onresult = (event) => {
             this.inputFlg = false;
@@ -43,14 +41,15 @@ class n01Calker {
         this.rec.onend = (event) => {
             if ( this.enable ) {
                 let self = this;
-                if (self.inputFlg) {
+                if (self.inputFlg && !self.gameShotFlg) {
                     setTimeout(function(){
                         self.rec.start();
-                    }, 5000);
-                    self.inputFlg = false;
+                    }, 7000);
                 } else {
                     self.rec.start();
                 }
+                self.inputFlg = false;
+                self.gameShotFlg = false;
             } 
         }
     }
@@ -71,6 +70,7 @@ class n01Calker {
     run () {
         this.rec.start();
     }
+
     stop () {
         console.log(this.hash_id + " stop.");
         this.enable = false;
@@ -85,8 +85,11 @@ class n01Calker {
                 let point = elm.transcript;
                 let confience = elm.confidence;
                 console.log(point + " : " + confience);
-                let reg = /(in|check)+ +([1-3])$/;
+                let reg = /([0-9])本目 *(です)*。*$/;
                 if (reg.test(point)) {
+                    point = point.replace("です", "").trim();
+                    point = point.replace("。", "").trim();
+                    point = point.replace("本目", "").trim();
 
                     reg = /([0-9]+$)/;
                     let mat = point.match(reg);
@@ -97,40 +100,34 @@ class n01Calker {
                     this.setHonme(mat[0]);
                     return true;
                 }
-                
-                reg = /(first|1st) dart$/;
-                if (reg.test(point)) {
-                    this.setHonme(1);
-                    return true;
-                }
-                reg = /(second|2nd) dart$/;
-                if (reg.test(point)) {
-                    this.setHonme(2);
-                    return true;
-                }
-                reg = /(third|3rd) dart$/;
-                if (reg.test(point)) {
-                    this.setHonme(3);
-                    return true;
-                }
-                reg = /(OK)$/;
+                reg = /(オーケー|OK)$/;
                 if (reg.test(point)) {
                     this.pressOK();
                     return true;
                 }
-                reg = /(game on)$/;
+                // reg = /(オーケー|OK) *です。*$/;
+                // if (reg.test(point)) {
+                //     this.pressOK();
+                //     return;
+                // }
+                reg = /(お願いします)。*$/;
                 if (reg.test(point)) {
                     this.pressOK();
                     return true;
                 }
-                reg = /(cancel)$/;
+                reg = /(キャンセル) *です。*$/;
                 if (reg.test(point)) {
                     this.pressCancel();
                     return true;
                 }
                 // reg = /([0-9])+ *(です)*。*$/;
-                reg = /([0-9])$/;
+                reg = /([0-9])+ *(点|てん|です)*。*$/;
                 if (reg.test(point)) {
+                    point = point.replace("点", "").trim();
+                    point = point.replace("てん", "").trim();
+                    point = point.replace("時", "").trim();
+                    point = point.replace("です", "").trim();
+                    point = point.replace("。", "").trim();
         
                     reg = /([0-9]+$)/;
                     let mat = point.match(reg);
@@ -141,7 +138,7 @@ class n01Calker {
                     this.setPoint(mat[0]);
                     return true;
                 }
-                reg = /no score$/;
+                reg = /ノースコア$/;
                 if (reg.test(point)) {
                     this.setPoint(0);
                     return true;
@@ -171,7 +168,8 @@ class n01Calker {
         if (hon <= 0 || 4 <= hon) {
             return;
         }
-        if (this.isOpenMenuFinish()) {
+        this.gameShotFlg = true;
+        if (this.isOpenMenuFinish()) {    
             document.dispatchEvent( new KeyboardEvent( "keydown",{ key: "f" })) ;
         }
         document.dispatchEvent( new KeyboardEvent( "keydown",{key: hon })) ;
@@ -184,7 +182,7 @@ class n01Calker {
     
     getGrammerList() {
         let grammar =
-        '#JSGF V1.0 UTF-8 en; grammar numbers; public <number> = (0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20'+
+        '#JSGF V1.0 JIS ja; grammar numbers; public <number> = (0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20'+
                          '|21|22|23|24|25|26|27|28|29|30'+
                          '|31|32|33|34|35|36|37|38|39|40'+
                          '|41|42|43|44|45|46|47|48|49|50'+
@@ -200,7 +198,7 @@ class n01Calker {
                          '|141|142|143|144|145|146|147|148|149|150'+
                          '|151|152|153|154|155|156|157|158|159|160'+
                          '|161|162|164|165|167|168|170'+
-                         '|171|174|177|180|1st darts|2nd darts|3rd darts);';
+                         '|171|174|177|180|1本目|2本目|3本目)(点|点です|です);';
 
         const SpeechGrammarListClass = window.webkitSpeechGrammarList || window.SpeechGrammarList;
         const speechRecognitionList = new SpeechGrammarListClass();

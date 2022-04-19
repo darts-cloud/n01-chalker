@@ -1,9 +1,9 @@
 {
-  "name": "n01 Chalker English Version",
-  "version": "0.0.1.1",
-  "version_name": "0.0.1 beta1",
+  "name": "n01 Chalker",
+  "version": "0.2.0.4",
+  "version_name": "0.2.0 beta4",
   "manifest_version": 3,
-  "description": "Voice input realize on the n01 of nakka.com",
+  "description": "n01のサイトで音声入力を実現します。",
   "content_scripts": [{
     "matches": ["https://nakka.com/n01/"],
     "js": ["js/jquery-3.6.0.min.js", "js/n01-chalker.js"]
