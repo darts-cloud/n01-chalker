@@ -1,0 +1,20 @@
+{
+  "name": "n01 Chalker English Version",
+  "version": "0.0.1.2",
+  "version_name": "0.0.1 beta2",
+  "manifest_version": 3,
+  "description": "Voice input realize on the n01 of nakka.com",
+  "content_scripts": [{
+    "matches": ["https://nakka.com/n01/"],
+    "js": ["js/jquery-3.6.0.min.js", "js/n01-chalker.js"]
+  }],
+  "icons" : {
+    "128" : "icon128.png"
+  },
+  "host_permissions": [
+    "https://nakka.com/n01/"
+  ],
+  "permissions": [
+    "storage"
+  ]
+}
