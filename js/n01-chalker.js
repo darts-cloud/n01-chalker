@@ -1,10 +1,7 @@
 /* ========================================== 
   [[[TODO]]]
 ・オンライン対戦
-  ・対戦相手のターンはOFFにすること。
   ・観戦中はオフとすること。
-
-・60でーすなどをくみ取れるようにする。
 ============================================ */
 
 class n01Calker {
@@ -20,6 +17,7 @@ class n01Calker {
         chrome.storage.sync.set(defaults, function() {});
         this.enable = true;
         this.inputFlg = false;
+        this.disableFlg = false;
         this.gameShotFlg = false;
 
         const SpeechRecognitionClass = window.webkitSpeechRecognition || window.SpeechRecognition;
@@ -30,9 +28,28 @@ class n01Calker {
         this.rec.continuous = false;
         this.rec.interimResults = false;
         this.rec.lang = 'ja-JP';
+        // onendのstartが不要な可能性
+        // this.rec.continuous = true;
+        
+        // イベント設定
+        this.addEvent();
+    }
 
+    addEvent() {
         // イベント設定
         this.rec.onresult = (event) => {
+            console.log("onresult");
+            if (this.isOpponentsTurn()) {
+                console.log("isOpponentsTurn");
+                return;
+            }
+            if (this.disableFlg){
+                console.log("disabled");
+                return;
+            }
+        //            if (this.isOpponentsTalking()) {
+        //                return;
+        //            }
             this.inputFlg = false;
             if (this.analysis(event)) {
                 this.inputFlg = true;
@@ -41,16 +58,45 @@ class n01Calker {
         this.rec.onend = (event) => {
             if ( this.enable ) {
                 let self = this;
-                if (self.inputFlg && !self.gameShotFlg) {
-                    setTimeout(function(){
-                        self.rec.start();
-                    }, 7000);
-                } else {
-                    self.rec.start();
-                }
+                // if (self.inputFlg && !self.gameShotFlg) {
+                //     setTimeout(function(){
+                //         self.rec.start();
+                //     }, 12000);
+                // } else {
+                //     self.rec.start();
+                // }
+                self.rec.start();
                 self.inputFlg = false;
                 self.gameShotFlg = false;
             } 
+        }
+        let table = document.querySelector("#score_table");
+        if (table != undefined) {
+            let self = this;
+            this.mo = new MutationObserver((mutations) => {
+                let cls = "p" + self.getPlayer();
+                if (mutations[0].target.className.includes(cls)) {
+                    // player turn is nocheck.
+                    return;
+                }
+                if (self.isOpenMenuFinish()) {
+                    // an opponent game shot.
+                    return;
+                }
+                // If entered by an opponent, 
+                // it will be disabled for a while.
+                self.disableFlg = true;
+                setTimeout(function(){
+                    self.disableFlg = false;
+                }, 7000);
+            });
+            var config = {
+                subtree: true,
+                childList: true,
+                attributes: true,
+                attributeFilter: [ "className" ]
+            };
+            this.mo.observe(table, config);
         }
     }
     
@@ -62,6 +108,39 @@ class n01Calker {
             return true;
         }
         return false;
+    }
+
+    /**
+     * get Player Number.
+     * @returns 
+     */
+    getPlayer() {
+        let id = $("#mic_on").parents(".score_left_big").attr("id");
+        if (id == "p1left_big_td") {
+            return 1;
+        }
+        return 2;
+    }
+
+    /**
+     * is Opponents Talking.
+     * *unused
+     * @returns 
+     */
+    isOpponentsTalking() {
+        let opponentsPlayerNumber = 2;
+        if (this.getPlayer() == 2) {
+            opponentsPlayerNumber = 2;
+        }
+        let selector = "p" + opponentsPlayerNumber + "left_big_td";
+        if ($("#" + selector).css("background-color") == 'rgba(0, 0, 0, 0)') {
+            return false;
+        }
+        return true;
+    }
+    
+    isOpponentsTurn() {
+        return $(".input_area").hasClass('loding');
     }
     
     /* ======================== */
@@ -80,6 +159,9 @@ class n01Calker {
     analysis(event) {
         let str = "";
         for (let idx in event.results[0]) {
+            if (this.isOpponentsTurn()) {
+                console.log("analysis isOpponentsTurn");
+            }
             let elm = event.results[0][idx];
             if (elm.confidence != undefined) {
                 let point = elm.transcript;

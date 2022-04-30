@@ -113,7 +113,7 @@ class n01Calker {
                     this.setHonme(3);
                     return true;
                 }
-                reg = /(OK)$/;
+                reg = /(OK|(o|O)kay)$/;
                 if (reg.test(point)) {
                     this.pressOK();
                     return true;
