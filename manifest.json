@@ -1,7 +1,7 @@
 {
   "name": "n01 Chalker",
-  "version": "0.2.0.4",
-  "version_name": "0.2.0 beta4",
+  "version": "0.2.0.5",
+  "version_name": "0.2.0 beta5",
   "manifest_version": 3,
   "description": "n01のサイトで音声入力を実現します。",
   "content_scripts": [{
@@ -16,5 +16,6 @@
   ],
   "permissions": [
     "storage"
-  ]
+  ],
+  "options_page": "settings/options.html"
 }

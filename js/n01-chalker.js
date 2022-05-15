@@ -20,6 +20,8 @@ class n01Calker {
         this.disableFlg = false;
         this.gameShotFlg = false;
 
+        this.loadSettings();
+
         const SpeechRecognitionClass = window.webkitSpeechRecognition || window.SpeechRecognition;
         this.rec = new SpeechRecognitionClass();
         // this.rec.grammars = getGrammerList();
@@ -34,7 +36,15 @@ class n01Calker {
         // イベント設定
         this.addEvent();
     }
-
+    loadSettings() {
+        let self = this;
+        chrome.storage.sync.get(['autochange'], function(items) {
+            self.autochange = true;
+            if (items.autochange != undefined) {
+                self.autochange = items.autochange;
+            }
+        });
+    }
     addEvent() {
         // イベント設定
         this.rec.onresult = (event) => {
@@ -77,15 +87,21 @@ class n01Calker {
                 let cls = "p" + self.getPlayer();
                 if (mutations[0].target.className.includes(cls)) {
                     // player turn is nocheck.
+                    console.log("player turn is nocheck.");
                     return;
                 }
-                if (self.isOpenMenuFinish()) {
-                    // an opponent game shot.
-                    return;
-                }
+                
+                // you requird 時になぜか入ってしまうため、コメントアウト
+                // if (self.isOpenMenuFinish()) {
+                //     // an opponent game shot.
+                //     console.log("an opponent game shot.");
+                //     return;
+                // }
+                
                 // If entered by an opponent, 
                 // it will be disabled for a while.
                 self.disableFlg = true;
+                console.log("self.disableFlg = true;");
                 setTimeout(function(){
                     self.disableFlg = false;
                 }, 7000);
@@ -235,7 +251,9 @@ class n01Calker {
             return;
         }
         $('.input_area').text(point);
-        document.dispatchEvent( new KeyboardEvent( "keydown",{key: "Tab" })) ;
+        if (this.autochange) {
+            document.dispatchEvent( new KeyboardEvent( "keydown",{key: "Tab" })) ;
+        }
     }
     
     pressOK() {
