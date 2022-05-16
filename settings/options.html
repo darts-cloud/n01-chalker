@@ -1,19 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-       <meta charset="UTF-8">
-       <title>n01-Chalker 設定画面</title>
-       <script src="options.js"></script>
-   </head>
-    <body style="background-color:#FF6">
-        <h1>n01-Chalker 設定画面</h1>
-        <div>
-            <input type="checkbox" name="autochange" id="autochange"></textarea>
-            <label for="autochange">コール後自動確定</label>
+
+<head>
+    <meta charset="UTF-8">
+    <title>n01-Chalker の設定</title>
+    <script src="options.js"></script>
+</head>
+
+<body style="background-color:#FFF;font-family:'YU Gothic UI', 'ヒラギノ角ゴシック'">
+    <h1 style="width:50%;margin:20px auto;font-size:10pt;font-weight:normal;">n01-Chalker の設定</h1>
+    <div style="border:1px solid white;border-radius: 10px;width:50%;margin:20px auto;box-shadow: 0px 2px 8px #AAA;">
+        <div class="setting" style="margin:10px; padding:10px; height:100px;">
+            <input type="checkbox" name="autochange" id="autochange"/>
+            <label for="autochange" style="font-family:'YU Gothic UI', 'ヒラギノ角ゴシック'">コール後自動確定</label>
         </div>
-        <br />
-        <div>
-            <button id="btn-save">保存</button>
+        <div style="margin:10px; padding:10px;font-family:'YU Gothic UI', 'ヒラギノ角ゴシック'">
+            ※ 反映するためにはn01のサイトを再読み込みしてください。
         </div>
-    </body>
+    </div>
+</body>
+
 </html>

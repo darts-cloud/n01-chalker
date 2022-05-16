@@ -5,7 +5,7 @@
   "manifest_version": 3,
   "description": "n01のサイトで音声入力を実現します。",
   "content_scripts": [{
-    "matches": ["https://nakka.com/n01/", "https://nakka.com/n01/online/n01.php"],
+    "matches": ["https://nakka.com/n01/", "https://nakka.com/n01/online/n01.php", "https://nakka.com/n01/league/n01_online.php"],
     "js": ["js/jquery-3.6.0.min.js", "js/n01-chalker.js"]
   }],
   "icons" : {
