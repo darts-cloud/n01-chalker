@@ -183,7 +183,7 @@ class n01Calker {
                 let point = elm.transcript;
                 let confience = elm.confidence;
                 console.log(point + " : " + confience);
-                let reg = /([0-9])本目 *(です)*。*$/;
+                let reg = /([1-3]|一|二|三)本目 *(です)*。*$/;
                 if (reg.test(point)) {
                     point = point.replace("です", "").trim();
                     point = point.replace("。", "").trim();
@@ -208,7 +208,7 @@ class n01Calker {
                 //     this.pressOK();
                 //     return;
                 // }
-                reg = /(お願いします)。*$/;
+                reg = /(はい|お願いします)。*$/;
                 if (reg.test(point)) {
                     this.pressOK();
                     return true;
