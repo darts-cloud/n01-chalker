@@ -16,9 +16,9 @@ class n01Calker {
         };
         chrome.storage.sync.set(defaults, function() {});
         this.enable = true;
-        this.inputFlg = false;
+        //this.inputFlg = false;
         this.disableFlg = false;
-        this.gameShotFlg = false;
+        //this.gameShotFlg = false;
 
         this.loadSettings();
 
@@ -27,11 +27,12 @@ class n01Calker {
         // this.rec.grammars = getGrammerList();
 
         this.rec.maxAlternatives = 10;
+        // onendのstartが不要な可能性あるが、
+        // 上手くいかない。
+        // this.rec.continuous = true;
         this.rec.continuous = false;
         this.rec.interimResults = false;
         this.rec.lang = 'ja-JP';
-        // onendのstartが不要な可能性
-        // this.rec.continuous = true;
         
         // イベント設定
         this.addEvent();
@@ -49,20 +50,22 @@ class n01Calker {
         // イベント設定
         this.rec.onresult = (event) => {
             console.log("onresult");
-            if (this.isOpponentsTurn()) {
-                console.log("isOpponentsTurn");
-                return;
-            }
-            if (this.disableFlg){
-                console.log("disabled");
-                return;
+            if (!this.isPopupMessage()) {
+                if (this.isOpponentsTurn()) {
+                    console.log("isOpponentsTurn");
+                    return;
+                }
+                if (this.disableFlg){
+                    console.log("disabled");
+                    return;
+                }
             }
         //            if (this.isOpponentsTalking()) {
         //                return;
         //            }
-            this.inputFlg = false;
+            //this.inputFlg = false;
             if (this.analysis(event)) {
-                this.inputFlg = true;
+                //this.inputFlg = true;
             }
         }
         this.rec.onend = (event) => {
@@ -76,8 +79,8 @@ class n01Calker {
                 //     self.rec.start();
                 // }
                 self.rec.start();
-                self.inputFlg = false;
-                self.gameShotFlg = false;
+                //self.inputFlg = false;
+                //self.gameShotFlg = false;
             } 
         }
         let table = document.querySelector("#score_table");
@@ -91,12 +94,11 @@ class n01Calker {
                     return;
                 }
                 
-                // you requird 時になぜか入ってしまうため、コメントアウト
-                // if (self.isOpenMenuFinish()) {
-                //     // an opponent game shot.
-                //     console.log("an opponent game shot.");
-                //     return;
-                // }
+                if (self.isOpenMenuFinish()) {
+                    // an opponent game shot.
+                    console.log("an opponent game shot.");
+                    return;
+                }
                 
                 // If entered by an opponent, 
                 // it will be disabled for a while.
@@ -120,7 +122,16 @@ class n01Calker {
     /* html analsys functions
     /* ======================== */
     isOpenMenuFinish() {
-        if ($('#menu_finish').is(':visible')) {
+        if ($('#finish_menu').is(':visible')) {
+            return true;
+        }
+        return false;
+    }
+    isPopupMessage() {
+        if ($('#popup_message_net').is(':visible')) {
+            return true;
+        }
+        if ($('#popup_message').is(':visible')) {
             return true;
         }
         return false;
@@ -188,6 +199,9 @@ class n01Calker {
                     point = point.replace("です", "").trim();
                     point = point.replace("。", "").trim();
                     point = point.replace("本目", "").trim();
+                    point = point.replace("一", "1").trim();
+                    point = point.replace("二", "2").trim();
+                    point = point.replace("三", "3").trim();
 
                     reg = /([0-9]+$)/;
                     let mat = point.match(reg);
@@ -219,10 +233,11 @@ class n01Calker {
                     return true;
                 }
                 // reg = /([0-9])+ *(です)*。*$/;
-                reg = /([0-9])+ *(点|てん|です)*。*$/;
+                // reg = /([0-9])+ *(点|てん|です)*。*$/;
+                reg = /([0-9])+ *(です)*。*$/;
                 if (reg.test(point)) {
-                    point = point.replace("点", "").trim();
-                    point = point.replace("てん", "").trim();
+                    // point = point.replace("点", "").trim();
+                    // point = point.replace("てん", "").trim();
                     point = point.replace("時", "").trim();
                     point = point.replace("です", "").trim();
                     point = point.replace("。", "").trim();
@@ -268,8 +283,8 @@ class n01Calker {
         if (hon <= 0 || 4 <= hon) {
             return;
         }
-        this.gameShotFlg = true;
-        if (this.isOpenMenuFinish()) {    
+        //this.gameShotFlg = true;
+        if (!this.isOpenMenuFinish()) {    
             document.dispatchEvent( new KeyboardEvent( "keydown",{ key: "f" })) ;
         }
         document.dispatchEvent( new KeyboardEvent( "keydown",{key: hon })) ;
